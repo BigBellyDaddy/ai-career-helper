@@ -1,3 +1,15 @@
+.welcome-container {
+  min-height: 100vh;
+  display: flex;
+  
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  background: linear-gradient(180deg, #eef6ff, #ffffff);
+  padding: 20px;
+  text-align: center;
+}
+
 #root {
   max-width: 1280px;
   margin: 0 auto;

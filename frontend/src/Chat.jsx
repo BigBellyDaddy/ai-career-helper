@@ -66,7 +66,7 @@ export default function Chat() {
         Wyślij
       </button>
 
-      <button onClick={() => navigate("/welcomePage")}>
+      <button onClick={() => navigate("/")}>
   Welcome Page
 </button>
 
