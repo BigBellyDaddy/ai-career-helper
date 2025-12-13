@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
-
+import chatlogo from "./assets/chatlogo.png";
 
 export default function Chat() {
   const [messages, setMessages] = useState([]);
@@ -10,12 +10,10 @@ export default function Chat() {
   const sendMessage = async () => {
     if (!input.trim()) return;
 
-    
     const updatedHistory = [...messages, { role: "user", content: input }];
 
     setMessages(updatedHistory);
 
-    
     const res = await fetch("http://localhost:3001/api/chat", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
@@ -27,7 +25,6 @@ export default function Chat() {
 
     const data = await res.json();
 
-    
     setMessages((prev) => [
       ...prev,
       { role: "assistant", content: data.reply },
@@ -37,12 +34,27 @@ export default function Chat() {
   };
 
   return (
-    <div style={{ maxWidth: 600, margin: "0 auto", padding: 20 }}>
-      <h2>AI Career Helper</h2>
+    <div style={{ flex: 1 , margin: "0 auto", padding: 20 }}>
+      <div
+  style={{
+    display: "flex",
+    justifyContent: "flex-start",
+  }}
+>
+
+        <img
+        src={chatlogo}
+        alt="chatlogo"
+        style={{ maxHeight: 500, maxWidth: 300,  }}
+      />
+      </div>
+      
+
+      <h2 style={{color:"black"}}>AI Career Helper</h2>
 
       <div
         style={{
-          height: 400,
+          height: 600,
           overflowY: "auto",
           border: "1px solid #ccc",
           padding: 10,
@@ -50,7 +62,7 @@ export default function Chat() {
         }}
       >
         {messages.map((m, i) => (
-          <p key={i}>
+          <p key={i} style={{color: "black"}}>
             <b>{m.role === "user" ? "Ty" : "AI"}:</b> {m.content}
           </p>
         ))}
@@ -64,12 +76,7 @@ export default function Chat() {
       />
       <button onClick={sendMessage} style={{ padding: 10 }}>
         Wyślij
-      </button>
-
-      <button onClick={() => navigate("/")}>
-  Welcome Page
-</button>
-
+      </button><button onClick={() => navigate("/")}>Welcome Page</button>
     </div>
   );
 }
