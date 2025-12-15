@@ -76,7 +76,9 @@ export default function Chat() {
       />
       <button onClick={sendMessage} style={{ padding: 10 }}>
         Wyślij
-      </button><button onClick={() => navigate("/")}>Welcome Page</button>
+      </button>
+      <div><button onClick={() => navigate("/")}>Welcome Page</button></div>
+      
     </div>
   );
 }

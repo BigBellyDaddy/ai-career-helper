@@ -10,7 +10,7 @@ const navigate = useNavigate();
       <img src={logo} alt="logo" style={{height: 600 , width: 600}}/>
       <h1 style={{color: "black"}}>AI CAREER HELPER</h1>
       <p style={{color: "black"}}>Unlock Your Potential. Guide Your Future.</p>
-      <button onClick = {() => navigate("/Chat")} >GET STARTED</button>
+      <button onClick = {() => navigate("/LoginPage")} >GET STARTED</button>
     </div>
   );
 }
