@@ -10,6 +10,7 @@ const app = express();
 app.use(cors());
 app.use(express.json()); 
 
-app.use("/api/chat", chatRoutes);
+app.use("/api", chatRoutes);
+
 
 app.listen(3001, () => console.log(`Server running on http://localhost:3001`));
