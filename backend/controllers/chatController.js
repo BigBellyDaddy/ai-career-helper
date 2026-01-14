@@ -1,6 +1,5 @@
 import { generateAIResponse } from "../services/aiService.js";
 
-// 🔹 обычный чат
 export const handleChat = async (req, res) => {
   try {
     const { message, history } = req.body;

@@ -1,7 +1,10 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import chatlogo from "./assets/chatlogo.png";
-
+import { Box, Typography, Button, Divider, Input, TextField } from "@mui/material";
+import Paper from '@mui/material/Paper'
+import IconButton from '@mui/material/IconButton'
+import MenuIcon from '@mui/icons-material/Menu'
 export default function Chat() {
   const [messages, setMessages] = useState([]);
   const [input, setInput] = useState("");
@@ -44,45 +47,42 @@ export default function Chat() {
   };
 
   const generateRoadmap = async () => {
-    try {
-      setLoadingRoadmap(true);
-      setRoadmapError(null);
+  try {
+    setLoadingRoadmap(true);
+    setRoadmapError(null);
 
-      const res = await fetch("http://localhost:3001/api/roadmap", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ history: messages }),
-      });
+    console.log("→ Wysyłam historię do /api/roadmap, długość:", messages.length);
 
-      const data = await res.json();
+    const res = await fetch("http://localhost:3001/api/roadmap", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ history: messages }),
+    });
 
-      if (!res.ok) {
-        throw new Error(data.error || "Roadmap error");
-      }
+    
 
-      navigate("/roadmap", { state: data.roadmap });
-    } catch (e) {
-      setRoadmapError("Nie udało się wygenerować ścieżki kariery.");
-    } finally {
-      setLoadingRoadmap(false);
-    }
-  };
+    const data = await res.json();
+    
+    const roadmapToSave = data.roadmap ?? data;
+   
 
+    localStorage.setItem("roadmap", JSON.stringify(roadmapToSave));
+    navigate("/roadmap", { state: roadmapToSave });
+
+  } catch (e) {
+    console.error("Błąd w generateRoadmap:", e);
+    setRoadmapError("Nie udało się wygenerować ścieżki kariery: " + e.message);
+  } finally {
+    setLoadingRoadmap(false);
+  }
+};
   return (
-    <div style={{ maxWidth: 800, margin: "0 auto", padding: 20 }}>
-      {/* Header */}
-      <div style={{ display: "flex", justifyContent: "flex-start" }}>
-        <img
-          src={chatlogo}
-          alt="chatlogo"
-          style={{ maxHeight: 120, maxWidth: 200 }}
-        />
-      </div>
-
-      <h2 style={{ color: "black" }}>AI Career Helper</h2>
+    <Box flex={1} backgroundColor="white">
+      
+      <Typography style={{ color: "black" }}>AI Career Helper</Typography>
 
       {/* Chat window */}
-      <div
+      <Box
         style={{
           height: 500,
           overflowY: "auto",
@@ -96,10 +96,11 @@ export default function Chat() {
             <b>{m.role === "user" ? "Ty" : "AI"}:</b> {m.content}
           </p>
         ))}
-      </div>
+      </Box>
+      
 
       {/* Input */}
-      <input
+      <TextField
         value={input}
         onChange={(e) => setInput(e.target.value)}
         placeholder="Zapytaj mnie o karierę..."
@@ -113,7 +114,7 @@ export default function Chat() {
       {/* Roadmap */}
       <div style={{ marginTop: 16 }}>
         <button
-          disabled={loadingRoadmap || messages.length < 2}
+          disabled={loadingRoadmap || messages.length < 6}
           onClick={generateRoadmap}
         >
           {loadingRoadmap ? "Generowanie..." : "Generuj ścieżkę kariery"}
@@ -128,6 +129,6 @@ export default function Chat() {
       <div style={{ marginTop: 20 }}>
         <button onClick={() => navigate("/")}>Welcome Page</button>
       </div>
-    </div>
+    </Box>
   );
 }
