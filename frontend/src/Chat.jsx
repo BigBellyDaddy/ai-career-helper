@@ -1,134 +1,117 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import chatlogo from "./assets/chatlogo.png";
-import { Box, Typography, Button, Divider, Input, TextField } from "@mui/material";
-import Paper from '@mui/material/Paper'
-import IconButton from '@mui/material/IconButton'
-import MenuIcon from '@mui/icons-material/Menu'
+import {
+  Box,
+  Typography,
+  Button,
+  Divider,
+  Input,
+  TextField,
+  Drawer,
+  Toolbar,
+  AppBar,
+  IconButton,
+} from "@mui/material";
+import CloseIcon from "@mui/icons-material/Close";
+import MenuIcon from "@mui/icons-material/Menu";
+
+const drawerWidth = 250;
 export default function Chat() {
-  const [messages, setMessages] = useState([]);
-  const [input, setInput] = useState("");
-
-  const [loadingRoadmap, setLoadingRoadmap] = useState(false);
-  const [roadmapError, setRoadmapError] = useState(null);
-
   const navigate = useNavigate();
+  const [open, setOpen] = useState(false);
 
-  const sendMessage = async () => {
-    if (!input.trim()) return;
-
-    const updatedHistory = [...messages, { role: "user", content: input }];
-    setMessages(updatedHistory);
-
-    try {
-      const res = await fetch("http://localhost:3001/api/chat", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          message: input,
-          history: updatedHistory,
-        }),
-      });
-
-      const data = await res.json();
-
-      setMessages((prev) => [
-        ...prev,
-        { role: "assistant", content: data.reply },
-      ]);
-    } catch (e) {
-      setMessages((prev) => [
-        ...prev,
-        { role: "assistant", content: "Wystąpił błąd serwera." },
-      ]);
-    }
-
-    setInput("");
+  const handleDrawerOpen = () => {
+    setOpen(true);
+  };
+  const handleDrawerClose = () => {
+    setOpen(false);
   };
 
-  const generateRoadmap = async () => {
-  try {
-    setLoadingRoadmap(true);
-    setRoadmapError(null);
-
-    console.log("→ Wysyłam historię do /api/roadmap, długość:", messages.length);
-
-    const res = await fetch("http://localhost:3001/api/roadmap", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ history: messages }),
-    });
-
-    
-
-    const data = await res.json();
-    
-    const roadmapToSave = data.roadmap ?? data;
-   
-
-    localStorage.setItem("roadmap", JSON.stringify(roadmapToSave));
-    navigate("/roadmap", { state: roadmapToSave });
-
-  } catch (e) {
-    console.error("Błąd w generateRoadmap:", e);
-    setRoadmapError("Nie udało się wygenerować ścieżki kariery: " + e.message);
-  } finally {
-    setLoadingRoadmap(false);
-  }
-};
   return (
     <Box flex={1} backgroundColor="white">
-      
-      <Typography style={{ color: "black" }}>AI Career Helper</Typography>
-
-      {/* Chat window */}
-      <Box
-        style={{
-          height: 500,
-          overflowY: "auto",
-          border: "1px solid #ccc",
-          padding: 10,
-          marginBottom: 10,
+      {/*Drawer*/}
+      <AppBar
+        position="fixed"
+        sx={{
+          bgcolor: "white",
+          color: "black",
+          boxShadow: 1,
+          width: open ? `calc(100% - ${drawerWidth}px)` : "100%",
+          ml: open ? `${drawerWidth}px` : 0,
+          transition: "all 200ms ease",
         }}
       >
-        {messages.map((m, i) => (
-          <p key={i} style={{ color: "black" }}>
-            <b>{m.role === "user" ? "Ty" : "AI"}:</b> {m.content}
-          </p>
-        ))}
-      </Box>
-      
+        <Toolbar>
+          {!open && (
+            <MenuIcon
+              onClick={handleDrawerOpen}
+              sx={{ cursor: "pointer", marginRight: 2, color: "black" }}
+            />
+          )}
 
-      {/* Input */}
-      <TextField
-        value={input}
-        onChange={(e) => setInput(e.target.value)}
-        placeholder="Zapytaj mnie o karierę..."
-        style={{ width: "75%", padding: 10 }}
-      />
+          <Typography
+            color="black"
+            variant="h6"
+            textAlign="center"
+            sx={{ pt: "4px" }}
+          >
+            AI Career Helper
+          </Typography>
+        </Toolbar>
 
-      <button onClick={sendMessage} style={{ padding: 10, marginLeft: 8 }}>
-        Wyślij
-      </button>
-
-      {/* Roadmap */}
-      <div style={{ marginTop: 16 }}>
-        <button
-          disabled={loadingRoadmap || messages.length < 6}
-          onClick={generateRoadmap}
+        {/* Drawer Component */}
+        <Drawer
+          variant="persistent"
+          anchor="left"
+          open={open}
+          onClose={handleDrawerClose}
         >
-          {loadingRoadmap ? "Generowanie..." : "Generuj ścieżkę kariery"}
-        </button>
+          <Box
+            sx={{ width: 250 }}
+            role="presentation"
+            onClick={handleDrawerClose}
+            onKeyDown={handleDrawerClose}
+          >
+            <Box sx={{ display: "flex", justifyContent: "flex-end" }}>
+              <IconButton
+                onClick={handleDrawerClose}
+                sx={{ my: "12px", mr: "20px" }}
+              >
+                <CloseIcon />
+              </IconButton>
+            </Box>
 
-        {roadmapError && (
-          <p style={{ color: "red", marginTop: 8 }}>{roadmapError}</p>
-        )}
-      </div>
+            <Divider />
 
-      {/* Navigation */}
-      <div style={{ marginTop: 20 }}>
-        <button onClick={() => navigate("/")}>Welcome Page</button>
-      </div>
+            {/* Drawer Buttons */}
+            <Button
+              sx={{ fontSize: 20, color: "black" }}
+              fullWidth
+              onClick={() => navigate("/")}
+            >
+              <Box sx={{ width: "100%", textAlign: "left", ml: 10 }}>Home</Box>
+            </Button>
+            <Button
+              sx={{ fontSize: 20, color: "black" }}
+              fullWidth
+              onClick={() => navigate("/chat")}
+            >
+              <Box sx={{ width: "100%", textAlign: "left", ml: 10 }}>Chat</Box>
+            </Button>
+
+            <Button
+              sx={{ fontSize: 20, color: "black" }}
+              fullWidth
+              onClick={() => navigate("/roadmap")}
+            >
+              <Box sx={{ width: "100%", textAlign: "left", ml: 10 }}>
+                RoadMap
+              </Box>
+            </Button>
+          </Box>
+        </Drawer>
+      </AppBar>
     </Box>
   );
 }
