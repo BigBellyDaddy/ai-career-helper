@@ -33,7 +33,7 @@ export default function LoginPage() {
   };
 
   return (
-    <Box>
+    <Box flex={1} justifyContent={"center"} alignItems="center" display="flex" flexDirection="column" gap={2}>
       <Box
         component="img"
         src={logo}
