@@ -1,9 +1,10 @@
 import React from "react";
 import { useNavigate } from "react-router-dom";
 import "./App.css";
-
+import { signInWithPopup } from "firebase/auth";
+import { auth, googleProvider } from "./firebase";
 import logo from "./assets/logo.png";
-
+import GoogleIcon from "@mui/icons-material/Google";
 import {
   Button,
   Box,
@@ -21,9 +22,8 @@ import VisibilityOff from "@mui/icons-material/VisibilityOff";
 
 export default function LoginPage() {
   const navigate = useNavigate();
-  
+
   const [showPassword, setShowPassword] = React.useState(false);
- 
 
   const handleClickShowPassword = () => {
     setShowPassword((show) => !show);
@@ -32,12 +32,21 @@ export default function LoginPage() {
   const handleMouseDownPassword = (event) => {
     event.preventDefault();
   };
-  
+
   const handleMouseUpPassword = (event) => {
     event.preventDefault();
   };
 
+  const loginWithGoogle = async () => {
+    try {
+      await signInWithPopup(auth, googleProvider);
+      navigate("/chat");
+    } catch (e) {
+      console.error(e);
+    }
+  };
 
+  
   return (
     <Box
       sx={{
@@ -68,7 +77,6 @@ export default function LoginPage() {
             objectFit: "contain",
           }}
         />
-        
       </Box>
 
       <Box
@@ -98,57 +106,22 @@ export default function LoginPage() {
             <Typography variant="body1" color="text.secondary">
               Log in to unlock your potential.
             </Typography>
-            
           </Box>
 
-          <Box sx={{ display: "flex", flexDirection: "column", gap: 2 }}>
-            <FormControl fullWidth variant="outlined">
-              <InputLabel>Email</InputLabel>
-              <OutlinedInput label="Email" type="email" />
-            </FormControl>
-
-            <FormControl fullWidth variant="outlined">
-              <InputLabel>Password</InputLabel>
-              <OutlinedInput
-                label="Password"
-                type={showPassword ? "text" : "password"}
-                endAdornment={
-                  <InputAdornment position="end">
-                    <IconButton
-                      aria-label={
-                        showPassword ? "hide the password" : "display the password"
-                      }
-                      onClick={handleClickShowPassword}
-                      onMouseDown={handleMouseDownPassword}
-                      onMouseUp={handleMouseUpPassword}
-                      edge="end"
-                    >
-                      {showPassword ? <VisibilityOff /> : <Visibility />}
-                    </IconButton>
-                  </InputAdornment>
-                }
-              />
-             
-            </FormControl>
-
-            <Button
-              variant="contained"
-              size="large"
-              sx={{
-                mt: 1,
-                borderRadius: 3,
-                textTransform: "none",
-                fontWeight: 700,
-                py: 1.2,
-              }}
-              onClick={() => {
-                navigate("/Chat");
-              }}
-            >
-              Log In
-            </Button>
-            
-          </Box>
+          <Button
+            fullWidth
+            variant="contained"
+            startIcon={<GoogleIcon />}
+            sx={{
+              borderRadius: 3,
+              textTransform: "none",
+              fontWeight: 700,
+              py: 1.2,
+            }}
+            onClick={loginWithGoogle}
+          >
+            Continue with Google
+          </Button>
         </Paper>
       </Box>
     </Box>

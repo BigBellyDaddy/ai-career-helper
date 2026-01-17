@@ -11,10 +11,14 @@ import {
   AppBar,
   IconButton,
   Paper,
+  Avatar,
 } from "@mui/material";
 import CloseIcon from "@mui/icons-material/Close";
 import MenuIcon from "@mui/icons-material/Menu";
 import SendIcon from "@mui/icons-material/Send";
+import LogoutIcon from "@mui/icons-material/Logout";
+import { onAuthStateChanged, signOut } from "firebase/auth";
+import { auth } from "./firebase";
 
 const drawerWidth = 250;
 
@@ -22,6 +26,15 @@ export default function Chat() {
   const navigate = useNavigate();
 
   const [open, setOpen] = useState(false);
+
+  const [user, setUser] = useState(null);
+
+  const [isTyping, setIsTyping] = useState(false);
+
+  useEffect(() => {
+    const unsubscribe = onAuthStateChanged(auth, (u) => setUser(u));
+    return () => unsubscribe();
+  }, []);
 
   const [messages, setMessages] = useState([
     {
@@ -31,6 +44,7 @@ export default function Chat() {
       ts: Date.now(),
     },
   ]);
+
   const [input, setInput] = useState("");
 
   const [loadingRoadmap, setLoadingRoadmap] = useState(false);
@@ -78,6 +92,8 @@ export default function Chat() {
     setMessages(updatedHistory);
     setInput("");
 
+    setIsTyping(true);
+
     try {
       const res = await fetch("http://localhost:3001/api/chat", {
         method: "POST",
@@ -108,6 +124,8 @@ export default function Chat() {
           ts: Date.now(),
         },
       ]);
+    } finally {
+      setIsTyping(false);
     }
   };
 
@@ -130,7 +148,7 @@ export default function Chat() {
       navigate("/roadmap", { state: roadmapToSave });
     } catch (e) {
       setRoadmapError(
-        "Nie udało się wygenerować ścieżki kariery: " + e.message
+        "Nie udało się wygenerować ścieżki kariery: " + e.message,
       );
     } finally {
       setLoadingRoadmap(false);
@@ -150,14 +168,14 @@ export default function Chat() {
         }}
       >
         <Box sx={{ width: drawerWidth }}>
-          <Box sx={{ display: "flex", justifyContent: "flex-end" , mb: 1 }}>
+          <Box sx={{ display: "flex", justifyContent: "flex-end", mb: 1 }}>
             <IconButton onClick={handleDrawerClose} sx={{ m: 1 }}>
               <CloseIcon />
             </IconButton>
-          </Box >
+          </Box>
           <Divider />
 
-          <Button  fullWidth onClick={() => navigate("/")}>
+          <Button fullWidth onClick={() => navigate("/")}>
             Home
           </Button>
           <Button fullWidth onClick={() => navigate("/chat")}>
@@ -192,7 +210,7 @@ export default function Chat() {
             transition: "all 200ms ease",
           }}
         >
-          <Toolbar >
+          <Toolbar>
             {!open && (
               <MenuIcon
                 onClick={handleDrawerOpen}
@@ -200,6 +218,36 @@ export default function Chat() {
               />
             )}
             <Typography variant="h6">AI Career Helper</Typography>
+
+            {user && (
+              <Box
+                sx={{
+                  display: "flex",
+                  alignItems: "center",
+                  justifyContent: "center",
+                  ml: "auto",
+                  gap: 1,
+                }}
+              >
+                <Typography sx={{ fontWeight: 700, fontSize: 14 }}>
+                  {user.displayName || "Użytkownik"}
+                </Typography>
+
+                <Avatar
+                  src={user.photoURL || ""}
+                  alt={user.displayName || "User"}
+                  sx={{ width: 34, height: 34 }}
+                />
+
+                <IconButton
+                  onClick={() => signOut(auth)}
+                  sx={{ ml: 0.5 }}
+                  title="Wyloguj"
+                >
+                  <LogoutIcon />
+                </IconButton>
+              </Box>
+            )}
           </Toolbar>
         </AppBar>
         <Toolbar />
@@ -218,7 +266,6 @@ export default function Chat() {
           <Box sx={{ maxWidth: 980, mx: "auto" }}>
             {messages.map((m) => {
               const isMe = m.role === "user";
-
               return (
                 <Box
                   key={m.id}
@@ -266,6 +313,29 @@ export default function Chat() {
                 </Box>
               );
             })}
+
+            {isTyping && (
+              <Box
+                sx={{ display: "flex", justifyContent: "flex-start", mb: 1.5 }}
+              >
+                <Paper
+                  elevation={0}
+                  sx={{
+                    px: 2,
+                    py: 1.2,
+                    borderRadius: 3,
+                    bgcolor: "#ECEFF4",
+                    color: "#111827",
+                    border: "1px solid #E5E7EB",
+                    maxWidth: 220,
+                  }}
+                >
+                  <Typography sx={{ fontSize: 14.5, fontWeight: "bold" }}>
+                    AI pisze...
+                  </Typography>
+                </Paper>
+              </Box>
+            )}
 
             {roadmapError && (
               <Typography sx={{ color: "red", mt: 1 }}>
