@@ -17,8 +17,17 @@ import CloseIcon from "@mui/icons-material/Close";
 import MenuIcon from "@mui/icons-material/Menu";
 import SendIcon from "@mui/icons-material/Send";
 import LogoutIcon from "@mui/icons-material/Logout";
+import Delete from "@mui/icons-material/Delete";
 import { onAuthStateChanged, signOut } from "firebase/auth";
 import { auth } from "./firebase";
+import {
+  upsertUserProfile,
+  createChat,
+  loadChats,
+  loadMessages,
+  saveMessage,
+  deleteChat,
+} from "./db/chatDb";
 
 const drawerWidth = 250;
 
@@ -26,15 +35,71 @@ export default function Chat() {
   const navigate = useNavigate();
 
   const [open, setOpen] = useState(false);
-
   const [user, setUser] = useState(null);
-
   const [isTyping, setIsTyping] = useState(false);
+  const [chatId, setChatId] = useState(null);
+  const [chats, setChats] = useState([]);
+  const [input, setInput] = useState("");
+  const [loadingRoadmap, setLoadingRoadmap] = useState(false);
+  const [roadmapError, setRoadmapError] = useState(false);
 
   useEffect(() => {
     const unsubscribe = onAuthStateChanged(auth, (u) => setUser(u));
     return () => unsubscribe();
   }, []);
+
+  useEffect(() => {
+    if (!user) return;
+
+    const init = async () => {
+      // user UID
+      await upsertUserProfile(user);
+
+      // Users chats
+      const list = await loadChats(user.uid);
+      setChats(list);
+
+      // Active Chat
+      const savedChatId = localStorage.getItem("activeChatId");
+
+      let active = savedChatId;
+
+      // New Chat if we hadnt
+      if (!active) {
+        active = await createChat(user.uid, "Pierwszy czat");
+        localStorage.setItem("activeChatId", active);
+      }
+
+      setChatId(active);
+
+      // Upload chats messeges
+      const msgs = await loadMessages(user.uid, active);
+
+      // msg to ui
+      if (msgs.length > 0) {
+        setMessages(
+          msgs.map((m) => ({
+            id: m.id,
+            role: m.role,
+            content: m.content,
+            ts: m.ts,
+          })),
+        );
+      } else {
+        // przeszle powiadominie jezeli nie mamy nowych
+        setMessages([
+          {
+            id: 1,
+            role: "assistant",
+            content: "Część? Jakie masz pytania związane z karierą?",
+            ts: Date.now(),
+          },
+        ]);
+      }
+    };
+
+    init();
+  }, [user]);
 
   const [messages, setMessages] = useState([
     {
@@ -45,12 +110,7 @@ export default function Chat() {
     },
   ]);
 
-  const [input, setInput] = useState("");
-
-  const [loadingRoadmap, setLoadingRoadmap] = useState(false);
-  const [roadmapError, setRoadmapError] = useState(false);
-
-  //Open/Close Drawer
+  //OPEN DRAWER|CLOSE DRAWER
   const handleDrawerOpen = () => {
     setOpen(true);
   };
@@ -67,16 +127,14 @@ export default function Chat() {
     el.scrollTop = el.scrollHeight;
   }, [messages]);
 
-  //Time formatting
+  //TIME FORMATING
   const formatTime = (ts) =>
     new Intl.DateTimeFormat("pl-PL", {
       hour: "2-digit",
       minute: "2-digit",
     }).format(ts);
 
-  {
-    /* Chat request handling */
-  }
+  //SENDING MESSAGE
   const sendMessage = async () => {
     const text = input.trim();
     if (!input.trim()) return;
@@ -91,7 +149,9 @@ export default function Chat() {
     const updatedHistory = [...messages, userMsg];
     setMessages(updatedHistory);
     setInput("");
-
+    if (user && chatId) {
+      await saveMessage(user.uid, chatId, "user", text);
+    }
     setIsTyping(true);
 
     try {
@@ -113,6 +173,10 @@ export default function Chat() {
         ts: Date.now(),
       };
 
+      if (user && chatId) {
+        await saveMessage(user.uid, chatId, "assistant", data.reply);
+      }
+
       setMessages((prev) => [...prev, botMsg]);
     } catch (e) {
       setMessages((prev) => [
@@ -129,6 +193,7 @@ export default function Chat() {
     }
   };
 
+  // ROADMAP GENERATION
   const generateRoadmap = async () => {
     try {
       setLoadingRoadmap(true);
@@ -155,6 +220,7 @@ export default function Chat() {
     }
   };
 
+  //JSX
   return (
     <Box sx={{ height: "100vh", display: "flex", bgcolor: "#fff" }}>
       {/* Drawer */}
@@ -175,9 +241,181 @@ export default function Chat() {
           </Box>
           <Divider />
 
-          <Button fullWidth onClick={() => navigate("/")}>
-            Home
-          </Button>
+          <Box
+            sx={{
+              justifyContent:"center",
+              display: "flex",
+              alignItems: "center",
+
+              gap: 1,
+              mb: 0.7,
+            }}
+          >
+            {" "}
+            {/* przycisk nowego chatu */}
+            <Button
+              fullWidth
+              variant="contained"
+              sx={{
+                maxWidth: 225,
+                borderRadius: 3,
+                textTransform: "none",
+                fontWeight: 700,
+              }}
+              onClick={async () => {
+                if (!user) return;
+
+                // nowy chat
+                const newId = await createChat(user.uid, "Nowy czat");
+
+                // zrobić go aktywnym
+                localStorage.setItem("activeChatId", newId);
+                setChatId(newId);
+
+                // czysty UI pod czat
+                setMessages([
+                  {
+                    id: 1,
+                    role: "assistant",
+                    content: "Część? Jakie masz pytania związane z karierą?",
+                    ts: Date.now(),
+                  },
+                ]);
+
+                // lista drawera
+                const list = await loadChats(user.uid);
+                setChats(list);
+              }}
+            >
+              + New Chat
+            </Button>
+          </Box>
+          {/* chaty  */}
+          <Box sx={{ p: 1 }}>
+            {chats.length === 0 ? (
+              <Typography
+                sx={{ fontSize: 13, color: "text.secondary", px: 1, py: 1 }}
+              >
+                Brak czatów
+              </Typography>
+            ) : (
+              chats.map((c) => (
+                <Box
+                  key={c.id}
+                  sx={{
+                    px: 0.5,
+                    display: "flex",
+                    alignItems: "center",
+
+                    gap: 1,
+                    mb: 0.7,
+                  }}
+                >
+                  <Button
+                    fullWidth
+                    variant={c.id === chatId ? "outlined" : "text"}
+                    sx={{
+                      display: "flex",
+                      alignItems: "center",
+                      justifyContent: "space-between",
+                      textTransform: "none",
+                      borderRadius: 3,
+                      fontWeight: 600,
+                      pr: 1,
+                      pl: 1.5,
+                    }}
+                    onClick={async () => {
+                      if (!user) return;
+
+                      setChatId(c.id);
+                      localStorage.setItem("activeChatId", c.id);
+
+                      const msgs = await loadMessages(user.uid, c.id);
+
+                      if (msgs.length > 0) {
+                        setMessages(
+                          msgs.map((m) => ({
+                            id: m.id,
+                            role: m.role,
+                            content: m.content,
+                            ts: m.ts,
+                          })),
+                        );
+                      } else {
+                        setMessages([
+                          {
+                            id: 1,
+                            role: "assistant",
+                            content:
+                              "Część? Jakie masz pytania związane z karierą?",
+                            ts: Date.now(),
+                          },
+                        ]);
+                      }
+
+                      setOpen(false);
+                    }}
+                  >
+                    <Box
+                      sx={{
+                        flexGrow: 1,
+                        textAlign: "left",
+                        overflow: "hidden",
+                        textOverflow: "ellipsis",
+                        whiteSpace: "nowrap",
+                      }}
+                    >
+                      {c.title || "Chat"}
+                    </Box>
+
+                    <IconButton
+                      size="small"
+                      title="Usuń czat"
+                      onClick={async (e) => {
+                        e.stopPropagation();
+
+                        if (!user) return;
+
+                        const ok = window.confirm(
+                          "Czy na pewno chcesz usunąć ten czat?",
+                        );
+                        if (!ok) return;
+
+                        await deleteChat(user.uid, c.id);
+
+                        if (c.id === chatId) {
+                          localStorage.removeItem("activeChatId");
+
+                          const newId = await createChat(user.uid, "Nowy czat");
+                          localStorage.setItem("activeChatId", newId);
+                          setChatId(newId);
+
+                          setMessages([
+                            {
+                              id: 1,
+                              role: "assistant",
+                              content:
+                                "Część? Jakie masz pytania związane z karierą?",
+                              ts: Date.now(),
+                            },
+                          ]);
+                        }
+
+                        const list = await loadChats(user.uid);
+                        setChats(list);
+                      }}
+                      sx={{ flexShrink: 0 }}
+                    >
+                      <Delete />
+                    </IconButton>
+                  </Button>
+                </Box>
+              ))
+            )}
+          </Box>
+
+          <Divider sx={{ my: 1 }} />
+
           <Button fullWidth onClick={() => navigate("/chat")}>
             Chat
           </Button>
