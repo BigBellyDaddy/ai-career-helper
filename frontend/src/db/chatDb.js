@@ -9,7 +9,8 @@ import {
   query,
   orderBy,
   getDoc,
-  deleteDoc
+  deleteDoc,
+  updateDoc
 } from "firebase/firestore";
 
 //Create and update user profile 
@@ -18,7 +19,7 @@ export const upsertUserProfile = async (user) => {
 
   const ref = doc(db, "users", user.uid);
 
-//if the user was previosly created 
+//If the user was previosly created 
   const snap = await getDoc(ref);
 
   const payload = {
@@ -37,10 +38,7 @@ export const upsertUserProfile = async (user) => {
   await setDoc(ref, payload, { merge: true });
 };
 
-/**
- * Создаёт новый чат:
- * users/{uid}/chats/{chatId}
- */
+//Create new chat users/{uid}/chats/{chatId}
 export const createChat = async (uid, title = "Nowy czat") => {
   const chatsRef = collection(db, "users", uid, "chats");
 
@@ -101,15 +99,68 @@ export const loadMessages = async (uid, chatId) => {
 };
 
 export const deleteChat = async (uid, chatId) => {
-  // delete msg
+  // delete messages
   const msgsRef = collection(db, "users", uid, "chats", chatId, "messages");
-  const snap = await getDocs(msgsRef);
+  const msgSnap = await getDocs(msgsRef);
+  for (const d of msgSnap.docs) await deleteDoc(d.ref);
 
-  for (const d of snap.docs) {
-    await deleteDoc(d.ref);
-  }
+  // delete roadmaps
+  const rmRef = collection(db, "users", uid, "chats", chatId, "roadmaps");
+  const rmSnap = await getDocs(rmRef);
+  for (const d of rmSnap.docs) await deleteDoc(d.ref);
 
   // delete chat
   const chatRef = doc(db, "users", uid, "chats", chatId);
   await deleteDoc(chatRef);
+};
+
+
+// update title chat
+export const updateChatTitle = async (uid, chatId, title) => {
+  const chatRef = doc(db, "users", uid, "chats", chatId);
+  await updateDoc(chatRef, {
+    title,
+    updatedAt: serverTimestamp(),
+  });
+};
+
+// save roadmap
+export const saveRoadmap = async (uid, chatId, roadmap) => {
+  const rmRef = collection(db, "users", uid, "chats", chatId, "roadmaps");
+
+  const docRef = await addDoc(rmRef, {
+    ...roadmap, 
+    createdAt: serverTimestamp(),
+  });
+
+  // update at for chat
+  const chatRef = doc(db, "users", uid, "chats", chatId);
+  await setDoc(chatRef, { updatedAt: serverTimestamp() }, { merge: true });
+
+  return docRef.id;
+};
+
+// all roadmaps 
+export const loadRoadmaps = async (uid, chatId) => {
+  const rmRef = collection(db, "users", uid, "chats", chatId, "roadmaps");
+  const q = query(rmRef, orderBy("createdAt", "desc"));
+  const snap = await getDocs(q);
+
+  return snap.docs.map((d) => ({
+    id: d.id,
+    ...d.data(),
+  }));
+};
+
+// save roadmap
+export const loadRoadmap = async (uid, chatId, roadmapId) => {
+  const ref = doc(db, "users", uid, "chats", chatId, "roadmaps", roadmapId);
+  const snap = await getDoc(ref);
+  if (!snap.exists()) return null;
+  return { id: snap.id, ...snap.data() };
+};
+// delete roadmap
+export const deleteRoadmap = async (uid, chatId, roadmapId) => {
+  const ref = doc(db, "users", uid, "chats", chatId, "roadmaps", roadmapId);
+  await deleteDoc(ref);
 };

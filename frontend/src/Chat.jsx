@@ -27,6 +27,8 @@ import {
   loadMessages,
   saveMessage,
   deleteChat,
+  updateChatTitle,
+  saveRoadmap,
 } from "./db/chatDb";
 
 const drawerWidth = 250;
@@ -41,7 +43,7 @@ export default function Chat() {
   const [chats, setChats] = useState([]);
   const [input, setInput] = useState("");
   const [loadingRoadmap, setLoadingRoadmap] = useState(false);
-  const [roadmapError, setRoadmapError] = useState(false);
+  const [roadmapError, setRoadmapError] = useState(null);
 
   useEffect(() => {
     const unsubscribe = onAuthStateChanged(auth, (u) => setUser(u));
@@ -134,6 +136,10 @@ export default function Chat() {
       minute: "2-digit",
     }).format(ts);
 
+  //CLEAR HISTORY FOR BACKEND
+  const compactHistory = (arr) =>
+    arr.map(({ role, content }) => ({ role, content }));
+
   //SENDING MESSAGE
   const sendMessage = async () => {
     const text = input.trim();
@@ -149,10 +155,24 @@ export default function Chat() {
     const updatedHistory = [...messages, userMsg];
     setMessages(updatedHistory);
     setInput("");
+    setIsTyping(true);
+
+    const clearHistory = compactHistory(updatedHistory);
+
     if (user && chatId) {
       await saveMessage(user.uid, chatId, "user", text);
+
+      const currentChat = chats.find((c) => c.id === chatId);
+
+      //rename only one-time
+      if (currentChat?.title === "Nowy czat") {
+        const newTitle = text.slice(0, 30);
+        await updateChatTitle(user.uid, chatId, newTitle);
+
+        const list = await loadChats(user.uid);
+        setChats(list);
+      }
     }
-    setIsTyping(true);
 
     try {
       const res = await fetch("http://localhost:3001/api/chat", {
@@ -160,7 +180,7 @@ export default function Chat() {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           message: text,
-          history: updatedHistory,
+          history: clearHistory,
         }),
       });
 
@@ -199,18 +219,35 @@ export default function Chat() {
       setLoadingRoadmap(true);
       setRoadmapError(null);
 
+      if (!user || !chatId) {
+        setRoadmapError("Nie wybrano aktywnego czatu.");
+        return;
+      }
+
+      const cleanHistory = compactHistory(messages);
+
       const res = await fetch("http://localhost:3001/api/roadmap", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ history: messages }),
+        body: JSON.stringify({ history: cleanHistory }),
       });
 
       const data = await res.json();
 
-      const roadmapToSave = data.roadmap ?? data;
+      if (!res.ok) {
+        throw new Error(data?.error || "RoadMap generation failed");
+      }
 
-      localStorage.setItem("roadmap", JSON.stringify(roadmapToSave));
-      navigate("/roadmap", { state: roadmapToSave });
+      const roadmapToSave = data.roadmap ?? data;
+      const roadmapId = await saveRoadmap(user.uid, chatId, roadmapToSave);
+
+      navigate("/roadmap", {
+        state: {
+          chatId,
+          roadmapId,
+          roadmap: roadmapToSave,
+        },
+      });
     } catch (e) {
       setRoadmapError(
         "Nie udało się wygenerować ścieżki kariery: " + e.message,
@@ -243,7 +280,7 @@ export default function Chat() {
 
           <Box
             sx={{
-              justifyContent:"center",
+              justifyContent: "center",
               display: "flex",
               alignItems: "center",
 
@@ -415,10 +452,6 @@ export default function Chat() {
           </Box>
 
           <Divider sx={{ my: 1 }} />
-
-          <Button fullWidth onClick={() => navigate("/chat")}>
-            Chat
-          </Button>
           <Button fullWidth onClick={() => navigate("/roadmap")}>
             RoadMap
           </Button>
@@ -467,6 +500,19 @@ export default function Chat() {
                   gap: 1,
                 }}
               >
+                <Button
+                  variant="contained"
+                  onClick={generateRoadmap}
+                  disabled={loadingRoadmap || messages.length <= 8}
+                  sx={{
+                    textTransform: "none",
+                    borderRadius: 3,
+                    fontWeight: 700,
+                    mr: 1,
+                  }}
+                >
+                  {loadingRoadmap ? "Generating..." : "Generate Roadmap"}
+                </Button>
                 <Typography sx={{ fontWeight: 700, fontSize: 14 }}>
                   {user.displayName || "Użytkownik"}
                 </Typography>
