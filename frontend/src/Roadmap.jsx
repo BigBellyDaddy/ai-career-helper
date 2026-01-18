@@ -1,11 +1,24 @@
 import { useEffect, useState } from "react";
-import { Box, Typography, Button, Divider, Paper, IconButton } from "@mui/material";
+import {
+  Box,
+  Typography,
+  Button,
+  Divider,
+  Paper,
+  IconButton,
+} from "@mui/material";
 import DeleteIcon from "@mui/icons-material/Delete";
 import { useLocation, useNavigate } from "react-router-dom";
 import { onAuthStateChanged } from "firebase/auth";
 import { auth } from "./firebase";
-
-import { loadChats, loadRoadmaps, loadRoadmap, deleteRoadmap } from "./db/chatDb";
+import {
+  loadChats,
+  loadRoadmaps,
+  loadRoadmap,
+  deleteRoadmap,
+} from "./db/chatDb";
+import { PDFDownloadLink } from "@react-pdf/renderer";
+import RoadmapPdf from "./RoadmapPdf";
 
 export default function Roadmap() {
   const location = useLocation();
@@ -13,8 +26,8 @@ export default function Roadmap() {
 
   const [user, setUser] = useState(null);
 
-  const [items, setItems] = useState([]); 
-  const [selected, setSelected] = useState(null); 
+  const [items, setItems] = useState([]);
+  const [selected, setSelected] = useState(null);
 
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
@@ -35,7 +48,6 @@ export default function Roadmap() {
 
         const chats = await loadChats(user.uid);
 
-        
         const all = [];
         for (const c of chats) {
           const rms = await loadRoadmaps(user.uid, c.id);
@@ -92,20 +104,14 @@ export default function Roadmap() {
 
     await deleteRoadmap(user.uid, selected.chatId, selected.roadmapId);
 
-    // delete from list
-    setItems((prev) =>
-      prev.filter(
-        (x) => !(x.chatId === selected.chatId && x.roadmapId === selected.roadmapId),
-      ),
-    );
-
-    // select next
-    setSelected((prevSelected) => {
-      const rest = items.filter(
+    setItems((prev) => {
+      const rest = prev.filter(
         (x) =>
-          !(x.chatId === prevSelected.chatId && x.roadmapId === prevSelected.roadmapId),
+          !(x.chatId === selected.chatId && x.roadmapId === selected.roadmapId),
       );
-      return rest.length > 0 ? rest[0] : null;
+
+      setSelected(rest.length > 0 ? rest[0] : null);
+      return rest;
     });
   };
 
@@ -121,7 +127,11 @@ export default function Roadmap() {
     return (
       <Box sx={{ p: 4 }}>
         <Typography sx={{ color: "red" }}>{error}</Typography>
-        <Button sx={{ mt: 2 }} variant="contained" onClick={() => navigate("/chat")}>
+        <Button
+          sx={{ mt: 2 }}
+          variant="contained"
+          onClick={() => navigate("/chat")}
+        >
           Powrót
         </Button>
       </Box>
@@ -160,7 +170,8 @@ export default function Roadmap() {
               key={`${it.chatId}_${it.roadmapId}`}
               fullWidth
               variant={
-                selected?.roadmapId === it.roadmapId && selected?.chatId === it.chatId
+                selected?.roadmapId === it.roadmapId &&
+                selected?.chatId === it.chatId
                   ? "contained"
                   : "outlined"
               }
@@ -228,6 +239,34 @@ export default function Roadmap() {
                 </Typography>
               </Box>
 
+              <PDFDownloadLink
+                document={
+                  <RoadmapPdf
+                    roadmap={selected?.roadmap}
+                    chatTitle={selected?.chatTitle}
+                  />
+                }
+                fileName={`${(selected?.roadmap?.career || "roadmap")
+                  .normalize("NFD")
+                  .replace(/[\u0300-\u036f]/g, "") // убираем диакритику
+                  .replace(/[^\p{L}\p{N}_-]+/gu, "_")}.pdf`}
+                style={{ textDecoration: "none" }}
+              >
+                {({ loading }) => (
+                  <Button
+                    variant="outlined"
+                    sx={{
+                      textTransform: "none",
+                      borderRadius: 3,
+                      fontWeight: 900,
+                    }}
+                    disabled={!selected || loading}
+                  >
+                    {loading ? "Preparing PDF..." : "Export PDF"}
+                  </Button>
+                )}
+              </PDFDownloadLink>
+
               <IconButton title="Usuń roadmap" onClick={handleDelete}>
                 <DeleteIcon />
               </IconButton>
@@ -239,7 +278,8 @@ export default function Roadmap() {
               Plan rozwoju
             </Typography>
 
-            {Array.isArray(selected.roadmap?.stages) && selected.roadmap.stages.length > 0 ? (
+            {Array.isArray(selected.roadmap?.stages) &&
+            selected.roadmap.stages.length > 0 ? (
               selected.roadmap.stages.map((s, i) => (
                 <Box key={i} sx={{ mb: 2 }}>
                   <Typography fontWeight={900}>{s.period}</Typography>
@@ -263,8 +303,6 @@ export default function Roadmap() {
             >
               Powrót
             </Button>
-
-            {/* PDF  */}
           </>
         )}
       </Paper>
