@@ -275,11 +275,135 @@ export default function Roadmap() {
             <Divider sx={{ my: 2 }} />
 
             <Typography fontWeight={900} sx={{ mb: 1 }}>
-              Plan rozwoju
+              Podsumowanie dopasowania
             </Typography>
 
-            {Array.isArray(selected.roadmap?.stages) &&
-            selected.roadmap.stages.length > 0 ? (
+            <Typography sx={{ color: "text.secondary", mb: 2 }}>
+              {selected.roadmap?.fit_summary || "Brak podsumowania."}
+            </Typography>
+
+            <Divider sx={{ my: 2 }} />
+
+            {/* STRENGTHS */}
+            <Typography fontWeight={900} sx={{ mb: 1 }}>
+              Top Strengths
+            </Typography>
+            {Array.isArray(selected.roadmap?.top_strengths) &&
+            selected.roadmap.top_strengths.length > 0 ? (
+              selected.roadmap.top_strengths.map((x, i) => (
+                <Typography key={i} sx={{ color: "text.secondary" }}>
+                  • {x}
+                </Typography>
+              ))
+            ) : (
+              <Typography sx={{ color: "text.secondary" }}>Brak.</Typography>
+            )}
+
+            <Divider sx={{ my: 2 }} />
+
+            {/* SKILL GAPS */}
+            <Typography fontWeight={900} sx={{ mb: 1 }}>
+              Skill gaps
+            </Typography>
+            {Array.isArray(selected.roadmap?.skill_gaps) &&
+            selected.roadmap.skill_gaps.length > 0 ? (
+              selected.roadmap.skill_gaps.map((x, i) => (
+                <Typography key={i} sx={{ color: "text.secondary" }}>
+                  • {x}
+                </Typography>
+              ))
+            ) : (
+              <Typography sx={{ color: "text.secondary" }}>Brak.</Typography>
+            )}
+
+            <Divider sx={{ my: 2 }} />
+
+            {/* WHY NOT OTHER */}
+            <Typography fontWeight={900} sx={{ mb: 1 }}>
+              Dlaczego nie inne ścieżki
+            </Typography>
+            {Array.isArray(selected.roadmap?.why_not_other) &&
+            selected.roadmap.why_not_other.length > 0 ? (
+              selected.roadmap.why_not_other.map((x, i) => (
+                <Typography key={i} sx={{ color: "text.secondary" }}>
+                  • {x}
+                </Typography>
+              ))
+            ) : (
+              <Typography sx={{ color: "text.secondary" }}>Brak.</Typography>
+            )}
+
+            <Divider sx={{ my: 2 }} />
+
+            {/* 12 WEEK ROADMAP */}
+            <Typography fontWeight={900} sx={{ mb: 1 }}>
+              Plan 12 tygodni
+            </Typography>
+
+            {Array.isArray(selected.roadmap?.roadmap_12_weeks) &&
+            selected.roadmap.roadmap_12_weeks.length > 0 ? (
+              selected.roadmap.roadmap_12_weeks.map((w) => (
+                <Paper
+                  key={w.week}
+                  elevation={0}
+                  sx={{
+                    p: 2,
+                    mb: 1.5,
+                    borderRadius: 3,
+                    border: "1px solid #E5E7EB",
+                    bgcolor: "#FAFAFA",
+                  }}
+                >
+                  <Typography fontWeight={950}>
+                    Week {w.week}: {w.theme}
+                  </Typography>
+
+                  <Typography fontWeight={900} sx={{ mt: 1 }}>
+                    Goals
+                  </Typography>
+                  {(w.goals || []).map((x, i) => (
+                    <Typography key={i} sx={{ color: "text.secondary" }}>
+                      • {x}
+                    </Typography>
+                  ))}
+
+                  <Typography fontWeight={900} sx={{ mt: 1 }}>
+                    Tasks
+                  </Typography>
+                  {(w.tasks || []).map((x, i) => (
+                    <Typography key={i} sx={{ color: "text.secondary" }}>
+                      • {x}
+                    </Typography>
+                  ))}
+
+                  <Typography fontWeight={900} sx={{ mt: 1 }}>
+                    Deliverables
+                  </Typography>
+                  {(w.deliverables || []).map((x, i) => (
+                    <Typography key={i} sx={{ color: "text.secondary" }}>
+                      • {x}
+                    </Typography>
+                  ))}
+
+                  <Typography fontWeight={900} sx={{ mt: 1 }}>
+                    Checks
+                  </Typography>
+                  {(w.checks || []).map((x, i) => (
+                    <Typography key={i} sx={{ color: "text.secondary" }}>
+                      • {x}
+                    </Typography>
+                  ))}
+
+                  <Typography fontWeight={900} sx={{ mt: 1 }}>
+                    Done definition
+                  </Typography>
+                  <Typography sx={{ color: "text.secondary" }}>
+                    {w.done_definition || "-"}
+                  </Typography>
+                </Paper>
+              ))
+            ) : Array.isArray(selected.roadmap?.stages) ? (
+              // ✅ fallback под старый формат чтобы ничего не ломалось
               selected.roadmap.stages.map((s, i) => (
                 <Box key={i} sx={{ mb: 2 }}>
                   <Typography fontWeight={900}>{s.period}</Typography>
@@ -290,8 +414,113 @@ export default function Roadmap() {
               ))
             ) : (
               <Typography sx={{ color: "text.secondary" }}>
-                Brak etapów.
+                Brak planu.
               </Typography>
+            )}
+
+            <Divider sx={{ my: 2 }} />
+
+            {/* PROJECTS */}
+            <Typography fontWeight={900} sx={{ mb: 1 }}>
+              Projects
+            </Typography>
+
+            {Array.isArray(selected.roadmap?.projects) &&
+            selected.roadmap.projects.length > 0 ? (
+              selected.roadmap.projects.map((p, i) => (
+                <Paper
+                  key={i}
+                  elevation={0}
+                  sx={{
+                    p: 2,
+                    mb: 1.5,
+                    borderRadius: 3,
+                    border: "1px solid #E5E7EB",
+                  }}
+                >
+                  <Typography fontWeight={950}>{p.name}</Typography>
+                  <Typography sx={{ color: "text.secondary", mb: 1 }}>
+                    {p.goal}
+                  </Typography>
+
+                  <Typography fontWeight={900}>Requirements</Typography>
+                  {(p.requirements || []).map((x, idx) => (
+                    <Typography key={idx} sx={{ color: "text.secondary" }}>
+                      • {x}
+                    </Typography>
+                  ))}
+
+                  <Typography fontWeight={900} sx={{ mt: 1 }}>
+                    Stack
+                  </Typography>
+                  {(p.stack || []).map((x, idx) => (
+                    <Typography key={idx} sx={{ color: "text.secondary" }}>
+                      • {x}
+                    </Typography>
+                  ))}
+
+                  <Typography fontWeight={900} sx={{ mt: 1 }}>
+                    Deliverables
+                  </Typography>
+                  {(p.deliverables || []).map((x, idx) => (
+                    <Typography key={idx} sx={{ color: "text.secondary" }}>
+                      • {x}
+                    </Typography>
+                  ))}
+                </Paper>
+              ))
+            ) : (
+              <Typography sx={{ color: "text.secondary" }}>
+                Brak projektów.
+              </Typography>
+            )}
+
+            <Divider sx={{ my: 2 }} />
+
+            {/* MILESTONES */}
+            <Typography fontWeight={900} sx={{ mb: 1 }}>
+              Milestones
+            </Typography>
+            {(selected.roadmap?.milestones || []).length > 0 ? (
+              selected.roadmap.milestones.map((x, i) => (
+                <Typography key={i} sx={{ color: "text.secondary" }}>
+                  • {x}
+                </Typography>
+              ))
+            ) : (
+              <Typography sx={{ color: "text.secondary" }}>Brak.</Typography>
+            )}
+
+            <Divider sx={{ my: 2 }} />
+
+            {/* RISKS */}
+            <Typography fontWeight={900} sx={{ mb: 1 }}>
+              Risks
+            </Typography>
+            {(selected.roadmap?.risks || []).length > 0 ? (
+              selected.roadmap.risks.map((x, i) => (
+                <Typography key={i} sx={{ color: "text.secondary" }}>
+                  • {x}
+                </Typography>
+              ))
+            ) : (
+              <Typography sx={{ color: "text.secondary" }}>Brak.</Typography>
+            )}
+
+            <Divider sx={{ my: 2 }} />
+
+            {/* NEXT QUESTIONS */}
+            <Typography fontWeight={900} sx={{ mb: 1 }}>
+              Następne pytania
+            </Typography>
+            {(selected.roadmap?.next_questions || []).length > 0 ? (
+              selected.roadmap.next_questions.map((x, i) => (
+                <Typography key={i} sx={{ color: "text.secondary" }}>
+                  • {x}
+                </Typography>
+              ))
+            ) : (
+              <Typography sx={{ color: "text.secondary" }}>Brak.</Typography>
             )}
 
             <Divider sx={{ my: 2 }} />

@@ -19,14 +19,14 @@ Font.register({
 const styles = StyleSheet.create({
   page: {
     padding: 36,
-    fontSize: 11,
+    fontSize: 10.5,
     fontFamily: "NotoSans",
     color: "#111827",
     lineHeight: 1.35,
   },
 
   header: {
-    marginBottom: 18,
+    marginBottom: 14,
     borderBottomWidth: 1,
     borderBottomColor: "#E5E7EB",
     paddingBottom: 10,
@@ -34,51 +34,106 @@ const styles = StyleSheet.create({
 
   title: {
     fontSize: 18,
-    fontWeight: "bold",
+    fontWeight: 700,
   },
 
   subtitle: {
-    marginTop: 10,
+    marginTop: 6,
     fontSize: 10,
     color: "#6B7280",
   },
 
   chip: {
-    marginTop: 12,
+    marginTop: 10,
     padding: 10,
     backgroundColor: "#F3F4F6",
-    borderRadius: 8,
+    borderRadius: 10,
+  },
+
+  careerTitle: {
+    marginTop: 4,
+    fontSize: 13,
+    fontWeight: 700,
   },
 
   sectionTitle: {
-    marginTop: 18,
+    marginTop: 14,
+    marginBottom: 6,
     fontSize: 12,
     fontWeight: 700,
     color: "#111827",
   },
 
-  stage: {
-    marginTop: 10,
-    padding: 12,
+  block: {
+    padding: 10,
     borderWidth: 1,
     borderColor: "#E5E7EB",
     borderRadius: 10,
+    marginBottom: 10,
   },
 
-  stagePeriod: {
+  muted: {
+    color: "#6B7280",
+  },
+
+  bullet: {
+    flexDirection: "row",
+    gap: 6,
+    marginBottom: 3,
+  },
+
+  bulletDot: {
+    width: 10,
+    color: "#111827",
+    fontWeight: 700,
+  },
+
+  bulletText: {
+    flex: 1,
+    color: "#374151",
+  },
+
+  grid2: {
+    flexDirection: "row",
+    gap: 20,
+  },
+
+  col: {
+    flex: 1,
+  },
+
+  weekCard: {
+    padding: 10,
+    borderWidth: 1,
+    borderColor: "#E5E7EB",
+    borderRadius: 10,
+    marginBottom: 10,
+    backgroundColor: "#FAFAFA",
+  },
+
+  weekTitle: {
     fontSize: 11,
     fontWeight: 700,
     marginBottom: 6,
   },
 
-  stageDesc: {
+  label: {
     fontSize: 10,
-    color: "#374151",
+    fontWeight: 700,
+    marginTop: 6,
+    marginBottom: 3,
+  },
+
+  done: {
+    marginTop: 6,
+    padding: 8,
+    borderRadius: 8,
+    backgroundColor: "#F3F4F6",
   },
 
   footer: {
     position: "absolute",
-    bottom: 24,
+    bottom: 22,
     left: 36,
     right: 36,
     fontSize: 9,
@@ -86,16 +141,29 @@ const styles = StyleSheet.create({
     borderTopWidth: 1,
     borderTopColor: "#E5E7EB",
     paddingTop: 8,
-    display: "flex",
     flexDirection: "row",
     justifyContent: "space-between",
   },
 });
 
-export default function RoadmapPdf({ roadmap, chatTitle }) {
-  const career = roadmap?.career || "Ścieżka kariery";
-  const stages = Array.isArray(roadmap?.stages) ? roadmap.stages : [];
+function BulletList({ items }) {
+  if (!Array.isArray(items) || items.length === 0) {
+    return <Text style={styles.muted}>Brak.</Text>;
+  }
 
+  return (
+    <View>
+      {items.map((it, idx) => (
+        <View key={idx} style={styles.bullet}>
+          <Text style={styles.bulletDot}>•</Text>
+          <Text style={styles.bulletText}>{String(it)}</Text>
+        </View>
+      ))}
+    </View>
+  );
+}
+
+export default function RoadmapPdf({ roadmap, chatTitle }) {
   const generatedAt = new Date().toLocaleString("pl-PL", {
     year: "numeric",
     month: "2-digit",
@@ -104,43 +172,195 @@ export default function RoadmapPdf({ roadmap, chatTitle }) {
     minute: "2-digit",
   });
 
+  const career = roadmap?.career || "Ścieżka kariery";
+  const fitSummary = roadmap?.fit_summary || "";
+
+  const topStrengths = roadmap?.top_strengths || [];
+  const skillGaps = roadmap?.skill_gaps || [];
+  const whyNotOther = roadmap?.why_not_other || [];
+
+  const weeks = roadmap?.roadmap_12_weeks || [];
+  const projects = roadmap?.projects || [];
+
+  const milestones = roadmap?.milestones || [];
+  const risks = roadmap?.risks || [];
+  const nextQuestions = roadmap?.next_questions || [];
+
+  // ✅ fallback для старого формата
+  const legacyStages = roadmap?.stages || [];
+
+  const hasNew = Array.isArray(weeks) && weeks.length > 0;
+
   return (
     <Document>
+      {/* ===================== PAGE 1: SUMMARY ===================== */}
       <Page size="A4" style={styles.page}>
-        {/* HEADER */}
         <View style={styles.header}>
           <Text style={styles.title}>AI Career Helper</Text>
-          <Text style={styles.subtitle}>Roadmap / Ścieżka kariery</Text>
+          <Text style={styles.subtitle}>
+            Roadmap / Ścieżka kariery — wersja PDF
+          </Text>
 
           <View style={styles.chip}>
             <Text style={{ fontSize: 10, color: "#6B7280" }}>
               Chat: {chatTitle || "Chat"}
             </Text>
-            <Text style={{ marginTop: 4, fontSize: 13, fontWeight: 700 }}>
-              {career}
-            </Text>
+            <Text style={styles.careerTitle}>{career}</Text>
           </View>
         </View>
 
-        {/* SECTION */}
-        <Text style={styles.sectionTitle}>Plan rozwoju</Text>
-
-        {stages.length === 0 ? (
-          <Text style={{ marginTop: 8, color: "#6B7280" }}>
-            Brak etapów w roadmapie.
+        {/* FIT SUMMARY */}
+        <Text style={styles.sectionTitle}>
+          Dlaczego to pasuje (fit summary)
+        </Text>
+        <View style={styles.block}>
+          <Text style={fitSummary ? styles.bulletText : styles.muted}>
+            {fitSummary || "Brak podsumowania dopasowania."}
           </Text>
-        ) : (
-          stages.map((s, i) => (
-            <View key={i} style={styles.stage}>
-              <Text style={styles.stagePeriod}>
-                {s.period || `Etap ${i + 1}`}
-              </Text>
-              <Text style={styles.stageDesc}>{s.description || "-"}</Text>
+        </View>
+
+        {/* 2 columns: strengths + gaps */}
+        <View style={styles.grid2}>
+          <View style={styles.col}>
+            <Text style={styles.sectionTitle}>Top strengths</Text>
+            <View style={styles.block}>
+              <BulletList items={topStrengths} />
+            </View>
+          </View>
+
+          <View style={styles.col}>
+            <Text style={styles.sectionTitle}>Skill gaps</Text>
+            <View style={styles.block}>
+              <BulletList items={skillGaps} />
+            </View>
+          </View>
+        </View>
+
+        {/* Why not other */}
+        <Text style={styles.sectionTitle}>Dlaczego nie inne ścieżki</Text>
+        <View style={styles.block}>
+          <BulletList items={whyNotOther} />
+        </View>
+
+        {/* Projects */}
+        <Text style={styles.sectionTitle}>Projekty (minimum 3)</Text>
+        {Array.isArray(projects) && projects.length > 0 ? (
+          projects.slice(0, 4).map((p, idx) => (
+            <View key={idx} style={styles.block} wrap={false}>
+              <Text style={{ fontWeight: 700, fontSize: 11 }}>{p.name}</Text>
+              <Text style={[styles.muted, { marginTop: 2 }]}>{p.goal}</Text>
+
+              <Text style={styles.label}>Requirements</Text>
+              <BulletList items={p.requirements} />
+
+              <Text style={styles.label}>Stack</Text>
+              <BulletList items={p.stack} />
+
+              <Text style={styles.label}>Deliverables</Text>
+              <BulletList items={p.deliverables} />
             </View>
           ))
+        ) : (
+          <View style={styles.block}>
+            <Text style={styles.muted}>Brak projektów.</Text>
+          </View>
         )}
 
-        {/* FOOTER */}
+        <View style={styles.footer}>
+          <Text>Generated: {generatedAt}</Text>
+          <Text>AI Career Helper</Text>
+        </View>
+      </Page>
+
+      {/* ===================== PAGE 2+: 12 WEEKS PLAN ===================== */}
+      <Page size="A4" style={styles.page}>
+        <View style={styles.header}>
+          <Text style={styles.title}>Plan wykonania</Text>
+          <Text style={styles.subtitle}>
+            12 tygodni — sprinty tygodniowe + definicja “DONE”
+          </Text>
+        </View>
+
+        {hasNew ? (
+          <View>
+            {weeks.map((w) => (
+              <View key={w.week} style={styles.weekCard}>
+                <Text style={styles.weekTitle}>
+                  Week {w.week}: {w.theme}
+                </Text>
+
+                <Text style={styles.label}>Goals</Text>
+                <BulletList items={w.goals} />
+
+                <Text style={styles.label}>Tasks</Text>
+                <BulletList items={w.tasks} />
+
+                <Text style={styles.label}>Deliverables</Text>
+                <BulletList items={w.deliverables} />
+
+                <Text style={styles.label}>Checks</Text>
+                <BulletList items={w.checks} />
+
+                <View style={styles.done}>
+                  <Text style={{ fontWeight: 700 }}>DONE definition</Text>
+                  <Text style={styles.bulletText}>
+                    {w.done_definition || "-"}
+                  </Text>
+                </View>
+              </View>
+            ))}
+          </View>
+        ) : Array.isArray(legacyStages) && legacyStages.length > 0 ? (
+          <View>
+            <Text style={styles.muted}>
+              (Fallback) Stary format roadmapy (stages):
+            </Text>
+
+            {legacyStages.map((s, idx) => (
+              <View key={idx} style={styles.block}>
+                <Text style={{ fontWeight: 700 }}>{s.period}</Text>
+                <Text style={[styles.muted, { marginTop: 3 }]}>
+                  {s.description}
+                </Text>
+              </View>
+            ))}
+          </View>
+        ) : (
+          <View style={styles.block}>
+            <Text style={styles.muted}>Brak planu tygodniowego.</Text>
+          </View>
+        )}
+
+        <View style={styles.footer}>
+          <Text>Generated: {generatedAt}</Text>
+          <Text>AI Career Helper</Text>
+        </View>
+      </Page>
+
+      {/* ===================== PAGE 3: extras ===================== */}
+      <Page size="A4" style={styles.page}>
+        <View style={styles.header}>
+          <Text style={styles.title}>Milestones / Risks / Next questions</Text>
+          <Text style={styles.subtitle}>
+            Checkpointy i co robić gdy utkniesz
+          </Text>
+        </View>
+
+        <Text style={styles.sectionTitle}>Milestones</Text>
+        <View style={styles.block}>
+          <BulletList items={milestones} />
+        </View>
+
+        <Text style={styles.sectionTitle}>Risks</Text>
+        <View style={styles.block}>
+          <BulletList items={risks} />
+        </View>
+
+        <Text style={styles.sectionTitle}>Next questions</Text>
+        <View style={styles.block}>
+          <BulletList items={nextQuestions} />
+        </View>
+
         <View style={styles.footer}>
           <Text>Generated: {generatedAt}</Text>
           <Text>AI Career Helper</Text>

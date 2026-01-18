@@ -18,26 +18,17 @@ export const handleRoadmap = async (req, res) => {
   try {
     const { history } = req.body;
 
-    const aiReply = await generateAIResponse(
-      "Wygeneruj ścieżkę kariery",
+    
+    const roadmap = await generateAIResponse(
+      "Wygeneruj roadmapę",
       history,
       "roadmap"
     );
 
-  
-    let parsed;
-    try {
-      const jsonMatch = aiReply.match(/\{[\s\S]*\}/);
-      if (!jsonMatch) throw new Error("No JSON found");
-      parsed = JSON.parse(jsonMatch[0]);
-    } catch (e) {
-      console.error("ROADMAP JSON ERROR:", aiReply);
-      return res.status(500).json({ error: "Invalid roadmap format" });
-    }
-
-    res.json({ roadmap: parsed });
+    res.json({ roadmap });
   } catch (error) {
     console.error("ROADMAP ERROR:", error);
     res.status(500).json({ error: "Roadmap generation failed" });
   }
 };
+
