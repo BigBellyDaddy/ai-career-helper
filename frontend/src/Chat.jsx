@@ -93,7 +93,7 @@ export default function Chat() {
           {
             id: 1,
             role: "assistant",
-            content: "Część! Jakie masz pytania związane z karierą?",
+            content: "Cześć! Jakie masz pytania związane z karierą?",
             ts: Date.now(),
           },
         ]);
