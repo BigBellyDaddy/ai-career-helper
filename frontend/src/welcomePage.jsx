@@ -1,4 +1,3 @@
-import React from "react";
 import { useNavigate } from "react-router-dom";
 import "./App.css";
 import logo from "./assets/logo.png";
@@ -23,11 +22,11 @@ export default function WelcomePage() {
         sx={{ maxWidth: 600, maxHeight: 600, alignSelf: "center" }}
       />
       <Box sx={{ textAlign: "center", mb: 4 }}>
-        <Typography color="black" variant="h3" fontWeight={700}>
+        <Typography  color="black" variant="h4" fontWeight={800} sx={{ mb: 0.5 }}>
           AI CAREER HELPER
         </Typography>
 
-        <Typography variant="subtitle1" color="text.secondary">
+        <Typography variant="body1" color="text.secondary">
           Unlock Your Potential. Guide Your Future.
         </Typography>
       </Box>
@@ -46,7 +45,6 @@ export default function WelcomePage() {
         }}
         onClick={() => navigate("/loginPage")}
       >
-        {" "}
         GET STARTED
       </Button>
     </Box>

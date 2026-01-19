@@ -93,7 +93,7 @@ export default function Chat() {
           {
             id: 1,
             role: "assistant",
-            content: "Część? Jakie masz pytania związane z karierą?",
+            content: "Część! Jakie masz pytania związane z karierą?",
             ts: Date.now(),
           },
         ]);
@@ -288,7 +288,6 @@ export default function Chat() {
               mb: 0.7,
             }}
           >
-            {" "}
             {/* przycisk nowego chatu */}
             <Button
               fullWidth
@@ -357,7 +356,7 @@ export default function Chat() {
                       justifyContent: "space-between",
                       textTransform: "none",
                       borderRadius: 3,
-                      fontWeight: 600,
+                      fontWeight: 700,
                       pr: 1,
                       pl: 1.5,
                     }}
@@ -452,9 +451,29 @@ export default function Chat() {
           </Box>
 
           <Divider sx={{ my: 1 }} />
-          <Button fullWidth onClick={() => navigate("/roadmap")}>
-            RoadMap
-          </Button>
+          <Box
+            sx={{
+              justifyContent: "center",
+              display: "flex",
+              alignItems: "center",
+              gap: 1,
+              mb: 0.7,
+            }}
+          >
+            <Button
+              fullWidth
+              variant="outlined"
+              sx={{
+                maxWidth: 225,
+                borderRadius: 3,
+                textTransform: "none",
+                fontWeight: 800,
+              }}
+              onClick={() => navigate("/roadmap")}
+            >
+              RoadMap
+            </Button>
+          </Box>
         </Box>
       </Drawer>
 
@@ -503,7 +522,7 @@ export default function Chat() {
                 <Button
                   variant="contained"
                   onClick={generateRoadmap}
-                  disabled={loadingRoadmap || messages.length <= 8}
+                  disabled={loadingRoadmap || messages.length <= 6}
                   sx={{
                     textTransform: "none",
                     borderRadius: 3,

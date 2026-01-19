@@ -1,41 +1,13 @@
-import React from "react";
 import { useNavigate } from "react-router-dom";
 import "./App.css";
 import { signInWithPopup } from "firebase/auth";
 import { auth, googleProvider } from "./firebase";
-import logo from "./assets/logo.png";
+import chatlogo from "./assets/chatlogo.png";
 import GoogleIcon from "@mui/icons-material/Google";
-import {
-  Button,
-  Box,
-  Typography,
-  FormControl,
-  InputLabel,
-  InputAdornment,
-  OutlinedInput,
-  IconButton,
-  Paper,
-} from "@mui/material";
-
-import Visibility from "@mui/icons-material/Visibility";
-import VisibilityOff from "@mui/icons-material/VisibilityOff";
+import { Button, Box, Typography, Paper } from "@mui/material";
 
 export default function LoginPage() {
   const navigate = useNavigate();
-
-  const [showPassword, setShowPassword] = React.useState(false);
-
-  const handleClickShowPassword = () => {
-    setShowPassword((show) => !show);
-  };
-
-  const handleMouseDownPassword = (event) => {
-    event.preventDefault();
-  };
-
-  const handleMouseUpPassword = (event) => {
-    event.preventDefault();
-  };
 
   const loginWithGoogle = async () => {
     try {
@@ -46,7 +18,6 @@ export default function LoginPage() {
     }
   };
 
-  
   return (
     <Box
       sx={{
@@ -68,11 +39,11 @@ export default function LoginPage() {
       >
         <Box
           component="img"
-          src={logo}
-          alt="logo"
+          src={chatlogo}
+          alt="chatogo"
           sx={{
             width: "100%",
-            maxWidth: 520,
+            maxWidth: 850,
             height: "auto",
             objectFit: "contain",
           }}
@@ -109,12 +80,14 @@ export default function LoginPage() {
           </Box>
 
           <Button
-            fullWidth
             variant="contained"
+            size="large"
+            fullWidth
             startIcon={<GoogleIcon />}
             sx={{
               borderRadius: 3,
               textTransform: "none",
+              alignSelf: "center",
               fontWeight: 700,
               py: 1.2,
             }}

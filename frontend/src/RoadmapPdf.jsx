@@ -1,4 +1,3 @@
-import React from "react";
 import {
   Document,
   Page,
@@ -70,6 +69,14 @@ const styles = StyleSheet.create({
     borderColor: "#E5E7EB",
     borderRadius: 10,
     marginBottom: 10,
+  },
+  block1: {
+    padding: 10,
+    borderWidth: 1,
+    borderColor: "#E5E7EB",
+    borderRadius: 10,
+    marginBottom: 10,
+    flexDirection: "row",
   },
 
   muted: {
@@ -186,14 +193,12 @@ export default function RoadmapPdf({ roadmap, chatTitle }) {
   const risks = roadmap?.risks || [];
   const nextQuestions = roadmap?.next_questions || [];
 
-  // ✅ fallback для старого формата
   const legacyStages = roadmap?.stages || [];
 
   const hasNew = Array.isArray(weeks) && weeks.length > 0;
 
   return (
     <Document>
-      {/* ===================== PAGE 1: SUMMARY ===================== */}
       <Page size="A4" style={styles.page}>
         <View style={styles.header}>
           <Text style={styles.title}>AI Career Helper</Text>
@@ -209,17 +214,16 @@ export default function RoadmapPdf({ roadmap, chatTitle }) {
           </View>
         </View>
 
-        {/* FIT SUMMARY */}
         <Text style={styles.sectionTitle}>
           Dlaczego to pasuje (fit summary)
         </Text>
-        <View style={styles.block}>
+
+        <View style={styles.block1}>
           <Text style={fitSummary ? styles.bulletText : styles.muted}>
             {fitSummary || "Brak podsumowania dopasowania."}
           </Text>
         </View>
 
-        {/* 2 columns: strengths + gaps */}
         <View style={styles.grid2}>
           <View style={styles.col}>
             <Text style={styles.sectionTitle}>Top strengths</Text>
@@ -236,13 +240,11 @@ export default function RoadmapPdf({ roadmap, chatTitle }) {
           </View>
         </View>
 
-        {/* Why not other */}
         <Text style={styles.sectionTitle}>Dlaczego nie inne ścieżki</Text>
         <View style={styles.block}>
           <BulletList items={whyNotOther} />
         </View>
 
-        {/* Projects */}
         <Text style={styles.sectionTitle}>Projekty (minimum 3)</Text>
         {Array.isArray(projects) && projects.length > 0 ? (
           projects.slice(0, 4).map((p, idx) => (
@@ -272,7 +274,6 @@ export default function RoadmapPdf({ roadmap, chatTitle }) {
         </View>
       </Page>
 
-      {/* ===================== PAGE 2+: 12 WEEKS PLAN ===================== */}
       <Page size="A4" style={styles.page}>
         <View style={styles.header}>
           <Text style={styles.title}>Plan wykonania</Text>
@@ -337,7 +338,6 @@ export default function RoadmapPdf({ roadmap, chatTitle }) {
         </View>
       </Page>
 
-      {/* ===================== PAGE 3: extras ===================== */}
       <Page size="A4" style={styles.page}>
         <View style={styles.header}>
           <Text style={styles.title}>Milestones / Risks / Next questions</Text>
